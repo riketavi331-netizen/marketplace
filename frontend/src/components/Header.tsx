@@ -148,12 +148,12 @@ export default function Header() {
                   </Link>
                 </div>
               ) : (
-                /* ── UNAUTHORIZED ── two tabs */
-                <div className="hidden md:flex items-center bg-gray-100 rounded-xl p-0.5">
+                /* ── UNAUTHORIZED ── two tabs, always visible */
+                <div className="flex items-center bg-gray-100 rounded-xl p-0.5">
                   <Link
                     href="/auth"
                     className={clsx(
-                      'text-sm font-medium px-3 py-1.5 rounded-lg transition-colors',
+                      'text-sm font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap',
                       pathname === '/auth' && !pathname.includes('register')
                         ? 'bg-white shadow text-gray-900'
                         : 'text-gray-500 hover:text-gray-700',
@@ -164,7 +164,7 @@ export default function Header() {
                   <Link
                     href="/auth?mode=register"
                     className={clsx(
-                      'text-sm font-medium px-3 py-1.5 rounded-lg transition-colors',
+                      'text-sm font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap',
                       pathname.includes('register')
                         ? 'bg-white shadow text-gray-900'
                         : 'text-gray-500 hover:text-gray-700',
@@ -175,7 +175,7 @@ export default function Header() {
                 </div>
               )
             ) : (
-              <div className="w-32 h-8 bg-gray-100 rounded-lg animate-pulse hidden md:block" />
+              <div className="w-32 h-8 bg-gray-100 rounded-lg animate-pulse" />
             )}
 
             {/* Lang dropdown — always visible */}

@@ -140,9 +140,9 @@ export default function MobileTabBar() {
               </button>
             </div>
 
-            {/* User section */}
-            <div className="px-4 py-3 border-b border-gray-100">
-              {mounted && user ? (
+            {/* User section — show name/email only when authorized */}
+            {mounted && user && (
+              <div className="px-4 py-3 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
                     <UserCircle2 size={22} />
@@ -152,25 +152,8 @@ export default function MobileTabBar() {
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Link
-                    href="/auth"
-                    onClick={() => setDrawerOpen(false)}
-                    className="flex-1 text-center text-sm font-medium border border-gray-300 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    {t('login')}
-                  </Link>
-                  <Link
-                    href="/auth?mode=register"
-                    onClick={() => setDrawerOpen(false)}
-                    className="flex-1 text-center text-sm font-medium bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-                  >
-                    {t('register')}
-                  </Link>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Nav links */}
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
