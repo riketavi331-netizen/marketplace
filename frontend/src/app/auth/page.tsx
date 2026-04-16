@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -16,13 +16,19 @@ const PHONE_BODY_REGEX = /^\d{9}$/;
 function AuthForm() {
   const t = useT();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<Mode>(
-    searchParams.get('mode') === 'register' ? 'register' : 'login'
-  );
+  const [mode, setMode] = useState<Mode>('login');
   const [method, setMethod] = useState<Method>('email');
   const [form, setForm] = useState({ name: '', email: '', phoneBody: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  // Sync mode when URL changes (e.g. header buttons)
+  useEffect(() => {
+    const next = searchParams.get('mode') === 'register' ? 'register' : 'login';
+    setMode(next);
+    setErrors({});
+    setForm({ name: '', email: '', phoneBody: '', password: '' });
+  }, [searchParams]);
 
   const { loginEmail, loginPhone, registerEmail, registerPhone } = useAuthStore();
   const router = useRouter();
