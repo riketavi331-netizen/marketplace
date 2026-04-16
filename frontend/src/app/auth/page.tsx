@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, Suspense } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -13,7 +13,7 @@ type Method = 'email' | 'phone';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_BODY_REGEX = /^\d{9}$/;
 
-export default function AuthPage() {
+function AuthForm() {
   const t = useT();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<Mode>(
@@ -195,5 +195,13 @@ export default function AuthPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense>
+      <AuthForm />
+    </Suspense>
   );
 }
