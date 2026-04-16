@@ -84,6 +84,11 @@ export const translations = {
     loginToAccount: 'войти в аккаунт',
     aiError: 'Ошибка AI-стилиста',
     loginRequired: 'Войдите чтобы использовать AI-стилиста',
+
+    favorites: 'Избранное',
+    search: 'Поиск',
+    menu: 'Меню',
+    profile: 'Профиль',
   },
 
   en: {
@@ -171,6 +176,11 @@ export const translations = {
     loginToAccount: 'sign in',
     aiError: 'AI stylist error',
     loginRequired: 'Sign in to use the AI stylist',
+
+    favorites: 'Favorites',
+    search: 'Search',
+    menu: 'Menu',
+    profile: 'Profile',
   },
 
   ka: {
@@ -258,6 +268,11 @@ export const translations = {
     loginToAccount: 'ანგარიშში შესვლა',
     aiError: 'AI სტილისტის შეცდომა',
     loginRequired: 'შედი ანგარიშში AI სტილისტის გამოსაყენებლად',
+
+    favorites: 'რჩეულები',
+    search: 'ძიება',
+    menu: 'მენიუ',
+    profile: 'პროფილი',
   },
 } as const;
 
