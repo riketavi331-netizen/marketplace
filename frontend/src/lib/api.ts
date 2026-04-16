@@ -26,6 +26,10 @@ export const authApi = {
     api.post('/auth/login/email', data),
   loginPhone: (data: { phone: string; password: string }) =>
     api.post('/auth/login/phone', data),
+  registerSeller: (data: {
+    name: string; email: string; phone: string; password: string;
+    storeName: string; storeAddress: string; storePhone?: string;
+  }) => api.post('/auth/register/seller', data),
 };
 
 export const productsApi = {

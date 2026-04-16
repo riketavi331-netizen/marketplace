@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterByEmailDto, RegisterByPhoneDto } from './dto/register.dto';
 import { LoginByEmailDto, LoginByPhoneDto } from './dto/login.dto';
+import { RegisterSellerDto } from './dto/register-seller.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -31,5 +32,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Вход по телефону (+995)' })
   loginByPhone(@Body() dto: LoginByPhoneDto) {
     return this.authService.loginByPhone(dto);
+  }
+
+  @Post('register/seller')
+  @ApiOperation({ summary: 'Регистрация продавца — создаёт аккаунт STORE_OWNER + магазин' })
+  registerSeller(@Body() dto: RegisterSellerDto) {
+    return this.authService.registerSeller(dto);
   }
 }

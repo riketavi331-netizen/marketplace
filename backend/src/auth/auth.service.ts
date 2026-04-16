@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterByEmailDto, RegisterByPhoneDto } from './dto/register.dto';
 import { LoginByEmailDto, LoginByPhoneDto } from './dto/login.dto';
+import { RegisterSellerDto } from './dto/register-seller.dto';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -61,6 +62,36 @@ export class AuthService {
 
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Неверный телефон или пароль');
+
+    return this.signToken(user.id, user.email);
+  }
+
+  // ─── Регистрация продавца ───────────────────────────────
+  async registerSeller(dto: RegisterSellerDto) {
+    const emailExists = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (emailExists) throw new BadRequestException('Email уже используется');
+
+    const phoneExists = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+    if (phoneExists) throw new BadRequestException('Телефон уже используется');
+
+    const user = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        password: await bcrypt.hash(dto.password, 10),
+        role: 'STORE_OWNER',
+      },
+    });
+
+    await this.prisma.store.create({
+      data: {
+        name: dto.storeName,
+        address: dto.storeAddress,
+        phone: dto.storePhone,
+        email: dto.email,
+      },
+    });
 
     return this.signToken(user.id, user.email);
   }
