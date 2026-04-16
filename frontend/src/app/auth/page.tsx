@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth.store';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { useT } from '@/hooks/useT';
@@ -15,7 +15,10 @@ const PHONE_BODY_REGEX = /^\d{9}$/;
 
 export default function AuthPage() {
   const t = useT();
-  const [mode, setMode] = useState<Mode>('login');
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<Mode>(
+    searchParams.get('mode') === 'register' ? 'register' : 'login'
+  );
   const [method, setMethod] = useState<Method>('email');
   const [form, setForm] = useState({ name: '', email: '', phoneBody: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
