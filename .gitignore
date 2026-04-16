@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files — НЕ коммитим секреты
+.env
+.env.local
+.env.*.local
+envs/.env.prod
+envs/.env.staging
+
+# Prisma generated
+backend/src/generated/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Expo
+mobile/.expo/
+mobile/android/
+mobile/ios/
+
+# Uploads
+uploads/

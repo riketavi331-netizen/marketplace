@@ -1,0 +1,19 @@
+# DEV — инфраструктура локально, код запускается напрямую через npm
+# Использование: make dev
+
+include:
+  - path: docker-compose.base.yml
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"

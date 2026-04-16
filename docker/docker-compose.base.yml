@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: marketplace_postgres_${COMPOSE_PROJECT_NAME:-dev}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: marketplace_redis_${COMPOSE_PROJECT_NAME:-dev}
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: marketplace_minio_${COMPOSE_PROJECT_NAME:-dev}
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - miniodata:/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

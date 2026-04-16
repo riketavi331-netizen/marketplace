@@ -1,0 +1,24 @@
+# STAGING — наследует prod-конфиг целиком, переопределяет только порты и env
+# Staging = prod, но с другими переменными окружения
+# Использование: make staging
+
+include:
+  - path: docker-compose.prod.yml
+
+services:
+  postgres:
+    ports:
+      - "5433:5432"       # открываем только для отладки staging
+
+  redis:
+    ports:
+      - "6380:6379"
+
+  minio:
+    ports:
+      - "9002:9000"
+      - "9003:9001"       # MinIO Console доступна в staging
+
+  nginx:
+    ports:
+      - "8080:80"         # staging доступен на :8080
