@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { storesApi } from '@/lib/api';
 import Link from 'next/link';
 import { MapPin, Phone, Package } from 'lucide-react';
+import { useT } from '@/hooks/useT';
 
 export default function StoresPage() {
+  const t = useT();
   const { data: stores, isLoading } = useQuery({
     queryKey: ['stores'],
     queryFn: () => storesApi.getAll() as any,
@@ -19,7 +21,7 @@ export default function StoresPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Магазины</h1>
+      <h1 className="text-2xl font-bold">{t('stores')}</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(stores as any)?.map((store: any) => (
           <Link key={store.id} href={`/stores/${store.id}`}>
@@ -33,7 +35,7 @@ export default function StoresPage() {
                   <p className="flex items-center gap-2"><Phone size={14} /> {store.phone}</p>
                 )}
                 {store._count && (
-                  <p className="flex items-center gap-2"><Package size={14} /> {store._count.products} товаров</p>
+                  <p className="flex items-center gap-2"><Package size={14} /> {store._count.products} {t('productsCount')}</p>
                 )}
               </div>
             </div>

@@ -2,23 +2,44 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingCart, User, Sparkles, Store, Package, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, Sparkles, Store, Package, Menu, X, LogIn } from 'lucide-react';
 import { useCartStore } from '@/store/cart.store';
 import { useAuthStore } from '@/store/auth.store';
-import { useState } from 'react';
+import { useLangStore } from '@/store/lang.store';
+import { useT } from '@/hooks/useT';
+import { Lang } from '@/lib/i18n';
+import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
-const navLinks = [
-  { href: '/catalog', label: 'Каталог', icon: Package },
-  { href: '/stores', label: 'Магазины', icon: Store },
-  { href: '/ai', label: 'AI-стилист', icon: Sparkles, accent: true },
+const LANGS: { code: Lang; label: string; flag: string }[] = [
+  { code: 'ru', label: 'RU', flag: '🇷🇺' },
+  { code: 'en', label: 'EN', flag: '🇬🇧' },
+  { code: 'ka', label: 'KA', flag: '🇬🇪' },
 ];
 
 export default function Header() {
   const count = useCartStore((s) => s.count());
   const { user, logout } = useAuthStore();
+  const { lang, setLang } = useLangStore();
+  const t = useT();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // sync <html lang>
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  const navLinks = [
+    { href: '/catalog', labelKey: 'catalog' as const, icon: Package },
+    { href: '/stores', labelKey: 'stores' as const, icon: Store },
+    { href: '/ai', labelKey: 'aiStylist' as const, icon: Sparkles, accent: true },
+  ];
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -32,7 +53,7 @@ export default function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            {navLinks.map(({ href, label, icon: Icon, accent }) => (
+            {navLinks.map(({ href, labelKey, icon: Icon, accent }) => (
               <Link
                 key={href}
                 href={href}
@@ -42,16 +63,39 @@ export default function Header() {
                   pathname === href && 'text-primary-600 font-semibold',
                 )}
               >
-                <Icon size={16} /> {label}
+                <Icon size={16} /> {t(labelKey)}
               </Link>
             ))}
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-1 md:gap-3">
+          <div className="flex items-center gap-1 md:gap-2">
+
+            {/* Lang switcher */}
+            {mounted && (
+              <div className="hidden md:flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
+                {LANGS.map(({ code, label, flag }) => (
+                  <button
+                    key={code}
+                    onClick={() => setLang(code)}
+                    title={flag}
+                    className={clsx(
+                      'px-2 py-1 text-xs font-medium rounded-md transition-colors',
+                      lang === code
+                        ? 'bg-white shadow text-gray-900'
+                        : 'text-gray-500 hover:text-gray-700',
+                    )}
+                  >
+                    {flag} {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Cart */}
             <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg">
               <ShoppingCart size={22} />
-              {count > 0 && (
+              {mounted && count > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                   {count > 9 ? '9+' : count}
                 </span>
@@ -60,14 +104,24 @@ export default function Header() {
 
             {/* Desktop auth */}
             <div className="hidden md:flex items-center gap-2">
-              {user ? (
+              {mounted && user ? (
                 <>
-                  <Link href="/orders" className="text-sm text-gray-600 hover:text-primary-600">Заказы</Link>
-                  <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500">Выйти</button>
+                  <Link href="/orders" className="text-sm text-gray-600 hover:text-primary-600 px-2 py-1">
+                    {t('orders')}
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="text-sm text-gray-400 hover:text-red-500 px-2 py-1"
+                  >
+                    {t('logout')}
+                  </button>
                 </>
               ) : (
-                <Link href="/auth" className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-primary-600">
-                  <User size={18} /> Войти
+                <Link
+                  href="/auth"
+                  className="flex items-center gap-1.5 text-sm font-medium bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                  <LogIn size={16} /> {t('login')}
                 </Link>
               )}
             </div>
@@ -86,7 +140,7 @@ export default function Header() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-1">
-          {navLinks.map(({ href, label, icon: Icon, accent }) => (
+          {navLinks.map(({ href, labelKey, icon: Icon, accent }) => (
             <Link
               key={href}
               href={href}
@@ -97,25 +151,51 @@ export default function Header() {
                 pathname === href && 'bg-primary-50 text-primary-600',
               )}
             >
-              <Icon size={20} /> {label}
+              <Icon size={20} /> {t(labelKey)}
             </Link>
           ))}
+
+          {/* Mobile lang switcher */}
+          <div className="border-t border-gray-100 pt-3 mt-2">
+            <p className="text-xs text-gray-400 px-3 mb-2">{t('language')}</p>
+            <div className="flex gap-1 px-3">
+              {LANGS.map(({ code, label, flag }) => (
+                <button
+                  key={code}
+                  onClick={() => setLang(code)}
+                  className={clsx(
+                    'flex-1 py-2 text-sm font-medium rounded-lg transition-colors',
+                    lang === code
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+                  )}
+                >
+                  {flag} {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="border-t border-gray-100 pt-3 mt-2">
             {user ? (
               <div className="flex items-center justify-between px-3">
                 <span className="text-sm text-gray-600">{user.name}</span>
                 <div className="flex gap-3">
-                  <Link href="/orders" onClick={() => setOpen(false)} className="text-sm text-primary-600 font-medium">Заказы</Link>
-                  <button onClick={() => { logout(); setOpen(false); }} className="text-sm text-red-400">Выйти</button>
+                  <Link href="/orders" onClick={() => setOpen(false)} className="text-sm text-primary-600 font-medium">
+                    {t('orders')}
+                  </Link>
+                  <button onClick={() => { logout(); setOpen(false); }} className="text-sm text-red-400">
+                    {t('logout')}
+                  </button>
                 </div>
               </div>
             ) : (
               <Link
                 href="/auth"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors"
               >
-                <User size={20} /> Войти / Зарегистрироваться
+                <LogIn size={20} /> {t('loginOrRegister')}
               </Link>
             )}
           </div>

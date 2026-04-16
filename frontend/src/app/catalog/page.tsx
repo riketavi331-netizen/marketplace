@@ -5,8 +5,10 @@ import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { useT } from '@/hooks/useT';
 
 export default function CatalogPage() {
+  const t = useT();
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [gender, setGender] = useState('');
@@ -24,12 +26,11 @@ export default function CatalogPage() {
   });
 
   const hasFilters = categoryId || gender;
-
   const resetFilters = () => { setCategoryId(''); setGender(''); setPage(1); };
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <h1 className="text-xl md:text-2xl font-bold">Каталог</h1>
+      <h1 className="text-xl md:text-2xl font-bold">{t('catalog')}</h1>
 
       {/* Search + filter toggle */}
       <div className="flex gap-2">
@@ -37,7 +38,7 @@ export default function CatalogPage() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             className="input pl-9 text-sm"
-            placeholder="Поиск товаров..."
+            placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -49,7 +50,7 @@ export default function CatalogPage() {
           }`}
         >
           <SlidersHorizontal size={16} />
-          <span className="hidden sm:inline">Фильтры</span>
+          <span className="hidden sm:inline">{t('filters')}</span>
           {hasFilters && <span className="w-2 h-2 bg-white rounded-full sm:hidden" />}
         </button>
       </div>
@@ -62,7 +63,7 @@ export default function CatalogPage() {
             value={categoryId}
             onChange={(e) => { setCategoryId(e.target.value); setPage(1); }}
           >
-            <option value="">Все категории</option>
+            <option value="">{t('allCategories')}</option>
             {(categories as any)?.map((c: any) => (
               <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
             ))}
@@ -73,16 +74,16 @@ export default function CatalogPage() {
             value={gender}
             onChange={(e) => { setGender(e.target.value); setPage(1); }}
           >
-            <option value="">Все</option>
-            <option value="MEN">Мужское</option>
-            <option value="WOMEN">Женское</option>
-            <option value="UNISEX">Унисекс</option>
-            <option value="KIDS">Детское</option>
+            <option value="">{t('all')}</option>
+            <option value="MEN">{t('men')}</option>
+            <option value="WOMEN">{t('women')}</option>
+            <option value="UNISEX">{t('unisex')}</option>
+            <option value="KIDS">{t('kids')}</option>
           </select>
 
           {hasFilters && (
             <button onClick={resetFilters} className="flex items-center gap-1 text-sm text-red-400 hover:text-red-600 px-2">
-              <X size={14} /> Сбросить
+              <X size={14} /> {t('resetFilters')}
             </button>
           )}
         </div>
@@ -90,7 +91,7 @@ export default function CatalogPage() {
 
       {/* Results count */}
       {!isLoading && (
-        <p className="text-sm text-gray-400">{(data as any)?.total || 0} товаров</p>
+        <p className="text-sm text-gray-400">{(data as any)?.total || 0} {t('productsCount')}</p>
       )}
 
       {/* Grid */}

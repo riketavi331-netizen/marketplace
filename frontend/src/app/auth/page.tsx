@@ -5,39 +5,16 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useT } from '@/hooks/useT';
 
 type Mode = 'login' | 'register';
 type Method = 'email' | 'phone';
 
-// Валидация — те же правила что на бэкенде
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_BODY_REGEX = /^\d{9}$/; // 9 цифр после +995
-
-function validate(mode: Mode, method: Method, form: any): Record<string, string> {
-  const errors: Record<string, string> = {};
-
-  if (mode === 'register' && !form.name.trim()) {
-    errors.name = 'Введите имя';
-  }
-
-  if (method === 'email') {
-    if (!EMAIL_REGEX.test(form.email)) {
-      errors.email = 'Введите корректный email (например ivan@gmail.com)';
-    }
-  } else {
-    if (!PHONE_BODY_REGEX.test(form.phoneBody)) {
-      errors.phone = 'Введите 9 цифр номера';
-    }
-  }
-
-  if (form.password.length < 6) {
-    errors.password = 'Пароль минимум 6 символов';
-  }
-
-  return errors;
-}
+const PHONE_BODY_REGEX = /^\d{9}$/;
 
 export default function AuthPage() {
+  const t = useT();
   const [mode, setMode] = useState<Mode>('login');
   const [method, setMethod] = useState<Method>('email');
   const [form, setForm] = useState({ name: '', email: '', phoneBody: '', password: '' });
@@ -47,33 +24,43 @@ export default function AuthPage() {
   const { loginEmail, loginPhone, registerEmail, registerPhone } = useAuthStore();
   const router = useRouter();
 
-  const set = (field: string, value: string) => {
+  function validate(): Record<string, string> {
+    const errs: Record<string, string> = {};
+    if (mode === 'register' && !form.name.trim()) errs.name = t('enterName');
+    if (method === 'email') {
+      if (!EMAIL_REGEX.test(form.email)) errs.email = t('enterValidEmail');
+    } else {
+      if (!PHONE_BODY_REGEX.test(form.phoneBody)) errs.phone = t('enterPhone9');
+    }
+    if (form.password.length < 6) errs.password = t('passwordMin6');
+    return errs;
+  }
+
+  const setField = (field: string, value: string) => {
     setForm((f) => ({ ...f, [field]: value }));
     setErrors((e) => ({ ...e, [field]: '' }));
   };
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const errs = validate(mode, method, form);
+    const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setLoading(true);
     try {
       const phone = `+995${form.phoneBody}`;
-
       if (mode === 'register') {
         if (method === 'email') await registerEmail(form.name, form.email, form.password);
         else await registerPhone(form.name, phone, form.password);
-        toast.success('Аккаунт создан!');
+        toast.success(t('accountCreated'));
       } else {
         if (method === 'email') await loginEmail(form.email, form.password);
         else await loginPhone(phone, form.password);
-        toast.success('Добро пожаловать!');
+        toast.success(t('welcome'));
       }
       router.push('/');
     } catch (err: any) {
-      const msg = err?.message || (Array.isArray(err?.message) ? err.message[0] : 'Ошибка');
+      const msg = err?.message || (Array.isArray(err?.message) ? err.message[0] : 'Error');
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -84,7 +71,7 @@ export default function AuthPage() {
     <div className="max-w-md mx-auto pt-8 md:pt-12">
       <div className="card p-6 md:p-8">
         <h1 className="text-2xl font-bold text-center mb-6">
-          {mode === 'login' ? 'Вход' : 'Регистрация'}
+          {mode === 'login' ? t('loginTitle') : t('registerTitle')}
         </h1>
 
         {/* Email / Phone tabs */}
@@ -99,46 +86,43 @@ export default function AuthPage() {
                 method === m ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700',
               )}
             >
-              {m === 'email' ? '✉️ Email' : '📱 Телефон'}
+              {m === 'email' ? `✉️ ${t('emailLabel')}` : `📱 ${t('phoneLabel')}`}
             </button>
           ))}
         </div>
 
         <form onSubmit={handle} noValidate className="space-y-4">
-          {/* Name — только при регистрации */}
           {mode === 'register' && (
             <div>
-              <label className="text-sm font-medium block mb-1">Имя</label>
+              <label className="text-sm font-medium block mb-1">{t('nameLabel')}</label>
               <input
                 className={clsx('input', errors.name && 'border-red-400 focus:ring-red-400')}
-                placeholder="Иван Иванов"
+                placeholder={t('namePlaceholder')}
                 value={form.name}
-                onChange={(e) => set('name', e.target.value)}
+                onChange={(e) => setField('name', e.target.value)}
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
           )}
 
-          {/* Email */}
           {method === 'email' && (
             <div>
-              <label className="text-sm font-medium block mb-1">Email</label>
+              <label className="text-sm font-medium block mb-1">{t('emailLabel')}</label>
               <input
                 className={clsx('input', errors.email && 'border-red-400 focus:ring-red-400')}
                 type="email"
-                placeholder="ivan@gmail.com"
+                placeholder={t('emailPlaceholder')}
                 value={form.email}
-                onChange={(e) => set('email', e.target.value)}
+                onChange={(e) => setField('email', e.target.value)}
                 autoComplete="email"
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
           )}
 
-          {/* Phone */}
           {method === 'phone' && (
             <div>
-              <label className="text-sm font-medium block mb-1">Номер телефона</label>
+              <label className="text-sm font-medium block mb-1">{t('phoneLabel')}</label>
               <div className={clsx(
                 'flex rounded-lg border overflow-hidden transition-colors',
                 errors.phone ? 'border-red-400' : 'border-gray-300',
@@ -149,12 +133,11 @@ export default function AuthPage() {
                 </span>
                 <input
                   className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white"
-                  placeholder="551234567"
+                  placeholder={t('phonePlaceholder')}
                   value={form.phoneBody}
                   onChange={(e) => {
-                    // только цифры, не более 9
                     const val = e.target.value.replace(/\D/g, '').slice(0, 9);
-                    set('phoneBody', val);
+                    setField('phoneBody', val);
                   }}
                   inputMode="numeric"
                   maxLength={9}
@@ -170,15 +153,14 @@ export default function AuthPage() {
             </div>
           )}
 
-          {/* Password */}
           <div>
-            <label className="text-sm font-medium block mb-1">Пароль</label>
+            <label className="text-sm font-medium block mb-1">{t('passwordLabel')}</label>
             <input
               className={clsx('input', errors.password && 'border-red-400 focus:ring-red-400')}
               type="password"
-              placeholder="Минимум 6 символов"
+              placeholder={t('passwordPlaceholder')}
               value={form.password}
-              onChange={(e) => set('password', e.target.value)}
+              onChange={(e) => setField('password', e.target.value)}
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
             {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
@@ -189,19 +171,17 @@ export default function AuthPage() {
             disabled={loading}
             className="btn-primary w-full py-3 text-base mt-2"
           >
-            {loading
-              ? 'Загрузка...'
-              : mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
+            {loading ? t('loadingText') : mode === 'login' ? t('login') : t('register')}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          {mode === 'login' ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}{' '}
+          {mode === 'login' ? t('noAccount') : t('hasAccount')}{' '}
           <button
             onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErrors({}); }}
             className="text-primary-600 font-medium hover:underline"
           >
-            {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
+            {mode === 'login' ? t('register') : t('login')}
           </button>
         </p>
       </div>

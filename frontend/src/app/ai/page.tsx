@@ -7,6 +7,8 @@ import { Send, Sparkles, Bot, User } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import ProductCard from '@/components/ProductCard';
+import { useT } from '@/hooks/useT';
+import { useLangStore } from '@/store/lang.store';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,17 +17,19 @@ interface Message {
 }
 
 export default function AiPage() {
+  const t = useT();
   const { user } = useAuthStore();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: 'Привет! Я AI-стилист. Расскажи, что ищешь — для какого случая, стиль, размер, бюджет — и я подберу варианты из каталога.',
-    },
-  ]);
+  const lang = useLangStore((s) => s.lang);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update greeting when language changes
+  useEffect(() => {
+    setMessages([{ role: 'assistant', content: t('aiGreeting') }]);
+  }, [lang]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,7 +37,7 @@ export default function AiPage() {
 
   const send = async () => {
     if (!input.trim() || loading) return;
-    if (!user) { toast.error('Войдите чтобы использовать AI-стилиста'); return; }
+    if (!user) { toast.error(t('loginRequired')); return; }
 
     const userMessage = input;
     setInput('');
@@ -45,7 +49,7 @@ export default function AiPage() {
       const res: any = await aiApi.chat({ message: userMessage, history });
       setMessages((prev) => [...prev, { role: 'assistant', content: res.message, products: res.products }]);
     } catch {
-      toast.error('Ошибка AI-стилиста');
+      toast.error(t('aiError'));
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -54,20 +58,18 @@ export default function AiPage() {
 
   return (
     <div className="max-w-2xl mx-auto flex flex-col" style={{ height: 'calc(100dvh - 120px)' }}>
-      {/* Title */}
       <div className="flex items-center gap-2 mb-3 flex-shrink-0">
         <Sparkles className="text-purple-600" size={22} />
-        <h1 className="text-lg md:text-2xl font-bold">AI-стилист</h1>
+        <h1 className="text-lg md:text-2xl font-bold">{t('aiTitle')}</h1>
       </div>
 
       {!user && (
         <div className="card p-3 bg-yellow-50 border-yellow-200 text-sm mb-3 flex-shrink-0">
-          Для использования AI-стилиста нужно{' '}
-          <Link href="/auth" className="text-primary-600 font-medium">войти в аккаунт</Link>
+          {t('aiLoginRequired')}{' '}
+          <Link href="/auth" className="text-primary-600 font-medium">{t('loginToAccount')}</Link>
         </div>
       )}
 
-      {/* Chat messages — scrollable */}
       <div className="flex-1 overflow-y-auto card p-3 md:p-4 space-y-4 mb-3">
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-2 md:gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -106,12 +108,11 @@ export default function AiPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input — fixed at bottom */}
       <div className="flex gap-2 flex-shrink-0">
         <input
           ref={inputRef}
           className="input flex-1 text-sm"
-          placeholder="Опиши что ищешь..."
+          placeholder={t('aiPlaceholder')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}

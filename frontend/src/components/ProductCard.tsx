@@ -6,8 +6,10 @@ import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { useCartStore } from '@/store/cart.store';
 import toast from 'react-hot-toast';
+import { useT } from '@/hooks/useT';
 
 export default function ProductCard({ product }: { product: Product }) {
+  const t = useT();
   const addItem = useCartStore((s) => s.addItem);
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -19,7 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
       image: product.images[0],
       qty: 1,
     });
-    toast.success(`${product.name} добавлен в корзину`);
+    toast.success(`${product.name} ${t('addedToCart')}`);
   };
 
   return (
@@ -40,7 +42,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
           {!product.inStock && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white font-medium">Нет в наличии</span>
+              <span className="text-white font-medium">{t('outOfStock')}</span>
             </div>
           )}
         </div>
