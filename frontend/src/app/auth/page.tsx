@@ -181,7 +181,13 @@ export default function AuthPage() {
         <p className="text-center text-sm text-gray-500 mt-6">
           {mode === 'login' ? t('noAccount') : t('hasAccount')}{' '}
           <button
-            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErrors({}); }}
+            onClick={() => {
+              const next = mode === 'login' ? 'register' : 'login';
+              setMode(next);
+              setErrors({});
+              setForm({ name: '', email: '', phoneBody: '', password: '' });
+              router.replace(next === 'register' ? '/auth?mode=register' : '/auth');
+            }}
             className="text-primary-600 font-medium hover:underline"
           >
             {mode === 'login' ? t('register') : t('login')}
