@@ -27,8 +27,9 @@ export const authApi = {
   loginPhone: (data: { phone: string; password: string }) =>
     api.post('/auth/login/phone', data),
   registerSeller: (data: {
-    name: string; email: string; phone: string; password: string;
-    storeName: string; storeAddress: string; storePhone?: string;
+    firstName: string; lastName: string; passportId: string;
+    email: string; phone: string; postalAddress: string; password: string;
+    storeName: string; taxId?: string; storeAddress: string; storePhone?: string;
   }) => api.post('/auth/register/seller', data),
 };
 

@@ -10,8 +10,53 @@ import { useAuthStore } from '@/store/auth.store';
 import { useT } from '@/hooks/useT';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^\+995\d{9}$/;
 const PHONE_BODY_REGEX = /^\d{9}$/;
+const PASSPORT_REGEX = /^\d{9}$/;
+
+function PhoneInput({ value, onChange, error }: {
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+}) {
+  return (
+    <>
+      <div className={clsx(
+        'flex rounded-lg border overflow-hidden',
+        error ? 'border-red-400' : 'border-gray-300',
+        'focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent',
+      )}>
+        <span className="flex items-center px-3 bg-gray-50 text-gray-500 text-sm font-medium border-r border-gray-300 select-none">
+          🇬🇪 +995
+        </span>
+        <input
+          className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white"
+          placeholder="551234567"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 9))}
+          inputMode="numeric"
+          maxLength={9}
+        />
+        <span className={clsx('flex items-center pr-3 text-xs', value.length === 9 ? 'text-green-500' : 'text-gray-300')}>
+          {value.length}/9
+        </span>
+      </div>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </>
+  );
+}
+
+function Field({ label, hint, error, children }: {
+  label: string; hint?: string; error?: string; children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="text-sm font-medium block mb-1">{label}</label>
+      {children}
+      {hint && !error && <p className="text-gray-400 text-xs mt-1">{hint}</p>}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
 
 export default function SellerRegisterPage() {
   const t = useT();
@@ -19,33 +64,37 @@ export default function SellerRegisterPage() {
   const { fetchMe } = useAuthStore();
 
   const [form, setForm] = useState({
-    name: '',
+    firstName: '', lastName: '',
+    passportId: '',
     email: '',
     phoneBody: '',
+    postalAddress: '',
     password: '',
     storeName: '',
+    taxId: '',
     storeAddress: '',
     storePhoneBody: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const setField = (field: string, value: string) => {
+  const set = (field: string, value: string) => {
     setForm((f) => ({ ...f, [field]: value }));
     setErrors((e) => ({ ...e, [field]: '' }));
   };
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!form.name.trim()) errs.name = t('enterName');
+    if (!form.firstName.trim()) errs.firstName = t('enterFirstName');
+    if (!form.lastName.trim()) errs.lastName = t('enterLastName');
+    if (!PASSPORT_REGEX.test(form.passportId.trim())) errs.passportId = t('enterPassportId');
     if (!EMAIL_REGEX.test(form.email)) errs.email = t('enterValidEmail');
     if (!PHONE_BODY_REGEX.test(form.phoneBody)) errs.phone = t('enterPhone9');
+    if (!form.postalAddress.trim()) errs.postalAddress = t('enterPostalAddress');
     if (form.password.length < 6) errs.password = t('passwordMin6');
     if (!form.storeName.trim()) errs.storeName = t('enterStoreName');
     if (!form.storeAddress.trim()) errs.storeAddress = t('enterStoreAddress');
-    if (form.storePhoneBody && !PHONE_BODY_REGEX.test(form.storePhoneBody)) {
-      errs.storePhone = t('enterPhone9');
-    }
+    if (form.storePhoneBody && !PHONE_BODY_REGEX.test(form.storePhoneBody)) errs.storePhone = t('enterPhone9');
     return errs;
   }
 
@@ -57,11 +106,15 @@ export default function SellerRegisterPage() {
     setLoading(true);
     try {
       const res: any = await authApi.registerSeller({
-        name: form.name,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        passportId: form.passportId.trim(),
         email: form.email,
         phone: `+995${form.phoneBody}`,
+        postalAddress: form.postalAddress,
         password: form.password,
         storeName: form.storeName,
+        taxId: form.taxId.trim() || undefined,
         storeAddress: form.storeAddress,
         storePhone: form.storePhoneBody ? `+995${form.storePhoneBody}` : undefined,
       });
@@ -78,7 +131,7 @@ export default function SellerRegisterPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto pt-6 pb-12">
+    <div className="max-w-lg mx-auto pt-6 pb-16">
       {/* Header */}
       <div className="text-center mb-8">
         <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -88,138 +141,136 @@ export default function SellerRegisterPage() {
         <p className="text-sm text-gray-500 mt-1">{t('sellerRegisterSubtitle')}</p>
       </div>
 
-      <form onSubmit={handle} noValidate className="space-y-6">
+      <form onSubmit={handle} noValidate className="space-y-5">
 
         {/* ── Секция: данные владельца ── */}
         <div className="card p-5 space-y-4">
-          <div className="flex items-center gap-2 mb-1">
-            <User size={17} className="text-primary-600" />
+          <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
+            <User size={16} className="text-primary-600" />
             <h2 className="font-semibold text-sm text-gray-700">{t('ownerInfoTitle')}</h2>
           </div>
 
-          {/* Имя */}
-          <div>
-            <label className="text-sm font-medium block mb-1">{t('nameLabel')}</label>
-            <input
-              className={clsx('input', errors.name && 'border-red-400')}
-              placeholder={t('namePlaceholder')}
-              value={form.name}
-              onChange={(e) => setField('name', e.target.value)}
-            />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+          {/* Имя + Фамилия — side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('firstNameLabel')} error={errors.firstName}>
+              <input
+                className={clsx('input', errors.firstName && 'border-red-400')}
+                placeholder={t('firstNamePlaceholder')}
+                value={form.firstName}
+                onChange={(e) => set('firstName', e.target.value)}
+              />
+            </Field>
+            <Field label={t('lastNameLabel')} error={errors.lastName}>
+              <input
+                className={clsx('input', errors.lastName && 'border-red-400')}
+                placeholder={t('lastNamePlaceholder')}
+                value={form.lastName}
+                onChange={(e) => set('lastName', e.target.value)}
+              />
+            </Field>
           </div>
 
+          {/* ID паспорта */}
+          <Field label={t('passportIdLabel')} hint={t('passportIdHint')} error={errors.passportId}>
+            <input
+              className={clsx('input font-mono tracking-widest', errors.passportId && 'border-red-400')}
+              placeholder={t('passportIdPlaceholder')}
+              value={form.passportId}
+              onChange={(e) => set('passportId', e.target.value.replace(/\D/g, '').slice(0, 9))}
+              inputMode="numeric"
+              maxLength={9}
+            />
+          </Field>
+
           {/* Email */}
-          <div>
-            <label className="text-sm font-medium block mb-1">{t('emailLabel')}</label>
+          <Field label={t('emailLabel')} error={errors.email}>
             <input
               className={clsx('input', errors.email && 'border-red-400')}
               type="email"
               placeholder={t('emailPlaceholder')}
               value={form.email}
-              onChange={(e) => setField('email', e.target.value)}
+              onChange={(e) => set('email', e.target.value)}
               autoComplete="email"
             />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-          </div>
+          </Field>
 
-          {/* Телефон владельца */}
-          <div>
-            <label className="text-sm font-medium block mb-1">{t('phoneLabel')}</label>
-            <div className={clsx(
-              'flex rounded-lg border overflow-hidden',
-              errors.phone ? 'border-red-400' : 'border-gray-300',
-              'focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent',
-            )}>
-              <span className="flex items-center px-3 bg-gray-50 text-gray-500 text-sm font-medium border-r border-gray-300 select-none">
-                🇬🇪 +995
-              </span>
-              <input
-                className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white"
-                placeholder={t('phonePlaceholder')}
-                value={form.phoneBody}
-                onChange={(e) => setField('phoneBody', e.target.value.replace(/\D/g, '').slice(0, 9))}
-                inputMode="numeric"
-                maxLength={9}
-              />
-              <span className={clsx('flex items-center pr-3 text-xs', form.phoneBody.length === 9 ? 'text-green-500' : 'text-gray-300')}>
-                {form.phoneBody.length}/9
-              </span>
-            </div>
-            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-          </div>
+          {/* Телефон */}
+          <Field label={t('phoneLabel')} error={errors.phone}>
+            <PhoneInput
+              value={form.phoneBody}
+              onChange={(v) => set('phoneBody', v)}
+              error={errors.phone}
+            />
+          </Field>
+
+          {/* Почтовый адрес */}
+          <Field label={t('postalAddressLabel')} error={errors.postalAddress}>
+            <input
+              className={clsx('input', errors.postalAddress && 'border-red-400')}
+              placeholder={t('postalAddressPlaceholder')}
+              value={form.postalAddress}
+              onChange={(e) => set('postalAddress', e.target.value)}
+            />
+          </Field>
 
           {/* Пароль */}
-          <div>
-            <label className="text-sm font-medium block mb-1">{t('passwordLabel')}</label>
+          <Field label={t('passwordLabel')} error={errors.password}>
             <input
               className={clsx('input', errors.password && 'border-red-400')}
               type="password"
               placeholder={t('passwordPlaceholder')}
               value={form.password}
-              onChange={(e) => setField('password', e.target.value)}
+              onChange={(e) => set('password', e.target.value)}
               autoComplete="new-password"
             />
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-          </div>
+          </Field>
         </div>
 
         {/* ── Секция: данные магазина ── */}
         <div className="card p-5 space-y-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Store size={17} className="text-primary-600" />
+          <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
+            <Store size={16} className="text-primary-600" />
             <h2 className="font-semibold text-sm text-gray-700">{t('storeInfoTitle')}</h2>
           </div>
 
           {/* Название магазина */}
-          <div>
-            <label className="text-sm font-medium block mb-1">{t('storeNameLabel')}</label>
+          <Field label={t('storeNameLabel')} error={errors.storeName}>
             <input
               className={clsx('input', errors.storeName && 'border-red-400')}
               placeholder={t('storeNamePlaceholder')}
               value={form.storeName}
-              onChange={(e) => setField('storeName', e.target.value)}
+              onChange={(e) => set('storeName', e.target.value)}
             />
-            {errors.storeName && <p className="text-red-500 text-xs mt-1">{errors.storeName}</p>}
-          </div>
+          </Field>
+
+          {/* Номер ИП */}
+          <Field label={t('taxIdLabel')} hint={t('taxIdHint')} error={errors.taxId}>
+            <input
+              className="input"
+              placeholder={t('taxIdPlaceholder')}
+              value={form.taxId}
+              onChange={(e) => set('taxId', e.target.value)}
+            />
+          </Field>
 
           {/* Адрес магазина */}
-          <div>
-            <label className="text-sm font-medium block mb-1">{t('storeAddressLabel')}</label>
+          <Field label={t('storeAddressLabel')} error={errors.storeAddress}>
             <input
               className={clsx('input', errors.storeAddress && 'border-red-400')}
               placeholder={t('storeAddressPlaceholder')}
               value={form.storeAddress}
-              onChange={(e) => setField('storeAddress', e.target.value)}
+              onChange={(e) => set('storeAddress', e.target.value)}
             />
-            {errors.storeAddress && <p className="text-red-500 text-xs mt-1">{errors.storeAddress}</p>}
-          </div>
+          </Field>
 
-          {/* Телефон магазина (необязательно) */}
-          <div>
-            <label className="text-sm font-medium block mb-1">{t('storePhoneLabel')}</label>
-            <div className={clsx(
-              'flex rounded-lg border overflow-hidden',
-              errors.storePhone ? 'border-red-400' : 'border-gray-300',
-              'focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent',
-            )}>
-              <span className="flex items-center px-3 bg-gray-50 text-gray-500 text-sm font-medium border-r border-gray-300 select-none">
-                🇬🇪 +995
-              </span>
-              <input
-                className="flex-1 px-3 py-2 text-sm focus:outline-none bg-white"
-                placeholder={t('phonePlaceholder')}
-                value={form.storePhoneBody}
-                onChange={(e) => setField('storePhoneBody', e.target.value.replace(/\D/g, '').slice(0, 9))}
-                inputMode="numeric"
-                maxLength={9}
-              />
-              <span className={clsx('flex items-center pr-3 text-xs', form.storePhoneBody.length === 9 ? 'text-green-500' : 'text-gray-300')}>
-                {form.storePhoneBody.length}/9
-              </span>
-            </div>
-            {errors.storePhone && <p className="text-red-500 text-xs mt-1">{errors.storePhone}</p>}
-          </div>
+          {/* Телефон магазина */}
+          <Field label={t('storePhoneLabel')} error={errors.storePhone}>
+            <PhoneInput
+              value={form.storePhoneBody}
+              onChange={(v) => set('storePhoneBody', v)}
+              error={errors.storePhone}
+            />
+          </Field>
         </div>
 
         <button

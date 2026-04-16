@@ -1,14 +1,28 @@
-import { IsEmail, IsString, MinLength, IsNotEmpty, IsOptional, Matches } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsNotEmpty, IsOptional, Matches, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { EMAIL_REGEX, GEO_PHONE_REGEX } from './register.dto';
 
+// Грузинский паспорт: ровно 9 цифр
+export const GEO_PASSPORT_REGEX = /^\d{9}$/;
+
 export class RegisterSellerDto {
-  // ── Личные данные ──
-  @ApiProperty({ example: 'Георгий Иванов' })
+  // ── Личные данные владельца ──────────────────────────────
+
+  @ApiProperty({ example: 'Георгий' })
   @IsString()
   @IsNotEmpty({ message: 'Имя обязательно' })
-  name: string;
+  firstName: string;
+
+  @ApiProperty({ example: 'Иванов' })
+  @IsString()
+  @IsNotEmpty({ message: 'Фамилия обязательна' })
+  lastName: string;
+
+  @ApiProperty({ example: '01234567890', description: 'ID грузинского паспорта — 9 цифр' })
+  @Transform(({ value }) => value?.trim())
+  @Matches(GEO_PASSPORT_REGEX, { message: 'ID паспорта должен содержать ровно 9 цифр' })
+  passportId: string;
 
   @ApiProperty({ example: 'owner@store.com' })
   @Transform(({ value }) => value?.toLowerCase().trim())
@@ -21,16 +35,28 @@ export class RegisterSellerDto {
   @Matches(GEO_PHONE_REGEX, { message: 'Номер должен быть в формате +995XXXXXXXXX' })
   phone: string;
 
+  @ApiProperty({ example: 'Тбилиси, ул. Руставели 1, кв. 5' })
+  @IsString()
+  @IsNotEmpty({ message: 'Почтовый адрес обязателен' })
+  postalAddress: string;
+
   @ApiProperty({ example: 'secret123', minLength: 6 })
   @IsString()
   @MinLength(6, { message: 'Пароль минимум 6 символов' })
   password: string;
 
-  // ── Данные магазина ──
+  // ── Данные магазина ──────────────────────────────────────
+
   @ApiProperty({ example: 'Мой магазин' })
   @IsString()
   @IsNotEmpty({ message: 'Название магазина обязательно' })
   storeName: string;
+
+  @ApiProperty({ example: '123456789', required: false, description: 'Номер ИП (необязательно)' })
+  @IsOptional()
+  @Transform(({ value }) => value?.trim() || undefined)
+  @IsString()
+  taxId?: string;
 
   @ApiProperty({ example: 'Тбилиси, ул. Руставели 1' })
   @IsString()
