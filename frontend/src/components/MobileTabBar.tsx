@@ -113,7 +113,7 @@ export default function MobileTabBar() {
                 className="font-display text-xl font-semibold tracking-widest uppercase"
                 style={{ color: 'var(--gold)', letterSpacing: '0.15em' }}
               >
-                LUXE
+                4Hub
               </span>
               <button
                 onClick={() => setDrawerOpen(false)}

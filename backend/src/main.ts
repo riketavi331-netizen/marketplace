@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { Request, Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,11 +18,27 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      const allowed = [
+        process.env.FRONTEND_URL,
+        'http://localhost:3000',
+        'http://localhost:3001',
+      ].filter(Boolean);
+      // Разрешаем Vercel preview-деплои и локалку
+      if (!origin || allowed.includes(origin!) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
     credentials: true,
   });
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+
+  // Health check (для Railway)
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/api/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
 
   // Swagger только не в production
   if (env !== 'production') {

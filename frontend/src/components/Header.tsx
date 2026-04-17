@@ -109,7 +109,7 @@ export default function Header() {
             className="font-display text-xl md:text-2xl font-semibold shrink-0 tracking-widest uppercase"
             style={{ color: 'var(--gold)', letterSpacing: '0.15em' }}
           >
-            LUXE
+            4Hub
           </Link>
 
           {/* Desktop nav */}

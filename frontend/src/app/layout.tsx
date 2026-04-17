@@ -18,8 +18,8 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: 'Marketplace — одежда и обувь',
-  description: 'Локальный маркетплейс одежды и обуви',
+  title: '4Hub — одежда и обувь',
+  description: '4Hub — локальный маркетплейс одежды и обуви',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
