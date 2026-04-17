@@ -1,6 +1,7 @@
 # ---- Base ----
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 WORKDIR /app
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
 COPY prisma ./prisma/
 
@@ -15,20 +16,18 @@ RUN npx prisma generate
 RUN npm run build
 
 # ---- Production ----
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 WORKDIR /app
+
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 
-# Только prod зависимости — копируем из builder чтобы не пересобирать
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY prisma ./prisma
 COPY package*.json ./
 
-# Запуск миграций и старт
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
