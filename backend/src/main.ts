@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { Request, Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -38,7 +37,7 @@ async function bootstrap() {
 
   // Health check (для Railway)
   const httpAdapter = app.getHttpAdapter();
-  httpAdapter.get('/api/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
+  httpAdapter.get('/api/health', (_req: any, res: any) => res.json({ status: 'ok' }));
 
   // Swagger только не в production
   if (env !== 'production') {
