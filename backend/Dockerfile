@@ -6,7 +6,7 @@ COPY prisma ./prisma/
 
 # ---- Dependencies ----
 FROM base AS deps
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # ---- Build ----
 FROM deps AS builder
@@ -22,7 +22,7 @@ ENV NODE_ENV=production
 
 # Только prod зависимости
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev --legacy-peer-deps
 
 # Скопировать артефакты сборки
 COPY --from=builder /app/dist ./dist
