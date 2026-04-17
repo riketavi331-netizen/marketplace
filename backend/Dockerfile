@@ -6,7 +6,7 @@ COPY prisma ./prisma/
 
 # ---- Dependencies ----
 FROM base AS deps
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
 # ---- Build ----
 FROM deps AS builder
@@ -20,15 +20,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Только prod зависимости
-COPY package*.json ./
-RUN npm install --omit=dev --legacy-peer-deps
-
-# Скопировать артефакты сборки
+# Только prod зависимости — копируем из builder чтобы не пересобирать
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY prisma ./prisma
+COPY package*.json ./
 
 # Запуск миграций и старт
 COPY docker-entrypoint.sh ./
