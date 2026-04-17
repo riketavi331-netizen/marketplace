@@ -49,23 +49,34 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(uuid())
+  id          String         @id @default(uuid())
   storeId     String
-  store       Store       @relation(fields: [storeId], references: [id])
+  store       Store          @relation(fields: [storeId], references: [id])
   categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
+  category    Category       @relation(fields: [categoryId], references: [id])
   name        String
   description String?
-  price       Decimal     @db.Decimal(10, 2)
-  oldPrice    Decimal?    @db.Decimal(10, 2)
+  price       Decimal        @db.Decimal(10, 2)
+  oldPrice    Decimal?       @db.Decimal(10, 2)
   images      String[]
   sizes       String[]
   brand       String?
   gender      Gender?
-  inStock     Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  stock       Int            @default(0)
+  inStock     Boolean        @default(true)
+  colors      ProductColor[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   orderItems  OrderItem[]
+}
+
+model ProductColor {
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String  // "Красный", "Red", "წითელი"
+  hex       String? // "#FF0000"
+  image     String? // URL изображения для этого цвета
 }
 
 enum Gender {

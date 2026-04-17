@@ -66,3 +66,19 @@ export const adminApi = {
   getUsers: () => api.get('/admin/users'),
   getOrders: (page = 1) => api.get('/admin/orders', { params: { page } }),
 };
+
+export const sellerApi = {
+  getStats: () => api.get('/seller/stats'),
+  getProducts: () => api.get('/seller/products'),
+  createProduct: (data: any) => api.post('/seller/products', data),
+  updateProduct: (id: string, data: any) => api.patch(`/seller/products/${id}`, data),
+  deleteProduct: (id: string) => api.delete(`/seller/products/${id}`),
+  uploadImages: (files: File[]) => {
+    const fd = new FormData();
+    files.forEach((f) => fd.append('files', f));
+    return api.post('/seller/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  getOrders: () => api.get('/seller/orders'),
+  updateOrderStatus: (id: string, status: string) =>
+    api.patch(`/seller/orders/${id}/status`, { status }),
+};
