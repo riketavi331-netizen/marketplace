@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
-import { Package, ClipboardList, Plus, Pencil, Trash2, BarChart3, ChevronDown } from 'lucide-react';
+import { Package, ClipboardList, Plus, Pencil, Trash2, BarChart3, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { sellerApi, productsApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useT } from '@/hooks/useT';
@@ -69,6 +69,13 @@ export default function SellerDashboard() {
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => sellerApi.updateOrderStatus(id, status),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['seller-orders'] }); toast.success('Статус обновлён'); },
+  });
+
+  const productStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'DRAFT' | 'ACTIVE' }) =>
+      sellerApi.updateProduct(id, { status }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['seller-products'] }); toast.success('Статус товара обновлён'); },
+    onError: () => toast.error('Ошибка обновления статуса'),
   });
 
   const handleDelete = (id: string) => {
@@ -165,27 +172,39 @@ export default function SellerDashboard() {
                   </div>
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{p.name}</p>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="font-medium text-sm truncate">{p.name}</p>
+                      <span className={clsx(
+                        'text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0',
+                        p.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                      )}>
+                        {p.status === 'ACTIVE' ? t('productStatusActive') : t('productStatusDraft')}
+                      </span>
+                    </div>
                     <p className="text-xs text-gray-400">{p.category?.name}</p>
                     <p className="font-bold text-sm mt-1">{Number(p.price).toLocaleString('ru')} ₽</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={clsx('text-xs font-medium', p.inStock ? 'text-green-600' : 'text-red-400')}>
-                        {p.inStock ? t('inStock') : t('outOfStockLabel')}
-                      </span>
-                      <span className="text-xs text-gray-400">{p.stock} {t('pcs')}</span>
-                    </div>
+                    <span className="text-xs text-gray-400">{p.stock} {t('pcs')}</span>
                   </div>
                   {/* Actions */}
                   <div className="flex flex-col gap-1 shrink-0">
                     <button
                       onClick={() => { setEditProduct(p); setShowModal(true); }}
                       className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      title={t('editProduct')}
                     >
                       <Pencil size={15} />
                     </button>
                     <button
+                      onClick={() => productStatusMutation.mutate({ id: p.id, status: p.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE' })}
+                      className={clsx('p-1.5 rounded-lg transition-colors', p.status === 'ACTIVE' ? 'text-green-500 hover:bg-green-50' : 'text-gray-400 hover:text-green-600 hover:bg-green-50')}
+                      title={p.status === 'ACTIVE' ? t('unpublish') : t('publish')}
+                    >
+                      {p.status === 'ACTIVE' ? <Eye size={15} /> : <EyeOff size={15} />}
+                    </button>
+                    <button
                       onClick={() => handleDelete(p.id)}
                       className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title={t('deleteProduct')}
                     >
                       <Trash2 size={15} />
                     </button>

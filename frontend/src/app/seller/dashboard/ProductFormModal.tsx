@@ -51,6 +51,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
   // preview URLs for pending files
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
 
+  const [status, setStatus] = useState<'DRAFT' | 'ACTIVE'>(product?.status ?? 'DRAFT');
   const [saving, setSaving] = useState(false);
 
   // ── categories ───────────────────────────────────────────────
@@ -116,7 +117,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
   };
 
   // ── submit ───────────────────────────────────────────────────
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, submitStatus: 'DRAFT' | 'ACTIVE') => {
     e.preventDefault();
     if (!name.trim())     { toast.error('Введите название'); return; }
     if (!price || isNaN(+price)) { toast.error('Введите цену'); return; }
@@ -124,7 +125,6 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
 
     setSaving(true);
     try {
-      // 1. upload new product images if any
       let newImageUrls: string[] = [];
       if (pendingFiles.length) {
         const res = await sellerApi.uploadImages(pendingFiles) as any;
@@ -132,7 +132,6 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
       }
       const allImages = [...existingImages, ...newImageUrls];
 
-      // 2. upload color images if any pending
       const resolvedColors = await Promise.all(
         colors.map(async (c) => {
           if (c._file) {
@@ -155,6 +154,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
         gender: gender || null,
         images: allImages,
         colors: resolvedColors,
+        status: submitStatus,
       };
 
       if (isEdit) {
@@ -163,7 +163,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
         await sellerApi.createProduct(payload);
       }
 
-      toast.success(isEdit ? 'Товар обновлён' : 'Товар добавлен');
+      toast.success(submitStatus === 'ACTIVE' ? 'Товар опубликован' : 'Черновик сохранён');
       onSaved();
       onClose();
     } catch (err: any) {
@@ -182,9 +182,17 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-bold">
-            {isEdit ? t('editProduct') : t('addProduct')}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold">
+              {isEdit ? t('editProduct') : t('addProduct')}
+            </h2>
+            <span className={clsx(
+              'text-xs px-2.5 py-1 rounded-full font-medium',
+              status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+            )}>
+              {status === 'ACTIVE' ? t('productStatusActive') : t('productStatusDraft')}
+            </span>
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
@@ -193,7 +201,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-5">
+        <form onSubmit={(e) => handleSubmit(e, status)} className="p-5 space-y-5">
           {/* ── Images ── */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -456,25 +464,33 @@ export default function ProductFormModal({ product, onClose, onSaved }: Props) {
           </div>
 
           {/* ── Submit ── */}
-          <div className="flex gap-3 pt-2 border-t border-gray-100">
+          <div className="flex gap-2 pt-2 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 btn-outline"
+              className="btn-outline px-4"
               disabled={saving}
             >
               {t('cancel')}
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={(e) => handleSubmit(e as any, 'DRAFT')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+              style={{ borderColor: '#d1a83a', color: '#a07020', background: '#fffbf0' }}
+              disabled={saving}
+            >
+              {saving && status === 'DRAFT' ? <Loader2 size={15} className="animate-spin" /> : null}
+              {t('saveDraft')}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleSubmit(e as any, 'ACTIVE')}
               className="flex-1 btn-primary flex items-center justify-center gap-2"
               disabled={saving}
             >
-              {saving ? (
-                <><Loader2 size={16} className="animate-spin" /> {t('saving')}</>
-              ) : (
-                t('saveProduct')
-              )}
+              {saving && status === 'ACTIVE' ? <Loader2 size={15} className="animate-spin" /> : null}
+              {t('publish')}
             </button>
           </div>
         </form>

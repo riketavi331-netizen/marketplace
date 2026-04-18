@@ -10,7 +10,7 @@ export class ProductsService {
   async findAll(filter: FilterProductsDto) {
     const { search, categoryId, storeId, brand, gender, minPrice, maxPrice, page = 1, limit = 20 } = filter;
 
-    const where: any = {};
+    const where: any = { status: 'ACTIVE' };
     if (search) where.name = { contains: search, mode: 'insensitive' };
     if (categoryId) where.categoryId = categoryId;
     if (storeId) where.storeId = storeId;
