@@ -161,6 +161,18 @@ export default function Header() {
             {mounted ? (
               user ? (
                 <div className="flex items-center gap-0.5">
+                  {user.role !== 'STORE_OWNER' && (
+                    <Link
+                      href="/seller/register"
+                      className="hidden md:flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-all"
+                      style={{ color: 'var(--gold)', background: 'var(--gold-sub)', border: '1px solid rgba(201,169,110,0.2)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,169,110,0.2)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--gold-sub)'; }}
+                    >
+                      <StoreIcon size={15} />
+                      {t('openStore')}
+                    </Link>
+                  )}
                   {user.role === 'STORE_OWNER' && (
                     <Link
                       href="/seller/dashboard"
