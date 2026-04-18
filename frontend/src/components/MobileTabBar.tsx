@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Menu, Heart, Search, ShoppingCart,
-  X, Package, Store, Sparkles, ClipboardList, LogOut, UserCircle2, LayoutDashboard,
+  X, Package, Store, Sparkles, ClipboardList, LogOut, UserCircle2, LayoutDashboard, StoreIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -166,6 +166,22 @@ export default function MobileTabBar() {
                 );
               })}
 
+              {mounted && !user && (
+                <>
+                  <div className="gold-divider my-3" />
+                  <Link
+                    href="/seller/register"
+                    onClick={() => setDrawerOpen(false)}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
+                    style={{ color: 'var(--gold)', background: 'var(--gold-sub)', border: '1px solid rgba(201,169,110,0.2)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,169,110,0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--gold-sub)'; }}
+                  >
+                    <StoreIcon size={19} /> {t('openStore')}
+                  </Link>
+                </>
+              )}
+
               {mounted && user && (
                 <>
                   <div className="gold-divider my-3" />
@@ -184,19 +200,31 @@ export default function MobileTabBar() {
                       <LayoutDashboard size={19} /> {t('sellerDashboard')}
                     </Link>
                   ) : (
-                    <Link
-                      href="/orders"
-                      onClick={() => setDrawerOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
-                      style={{
-                        color: pathname === '/orders' ? 'var(--gold)' : 'var(--tx-2)',
-                        background: pathname === '/orders' ? 'var(--gold-sub)' : 'transparent',
-                      }}
-                      onMouseEnter={e => { if (pathname !== '/orders') e.currentTarget.style.background = 'var(--elevated)'; }}
-                      onMouseLeave={e => { if (pathname !== '/orders') e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <ClipboardList size={19} /> {t('orders')}
-                    </Link>
+                    <>
+                      <Link
+                        href="/orders"
+                        onClick={() => setDrawerOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
+                        style={{
+                          color: pathname === '/orders' ? 'var(--gold)' : 'var(--tx-2)',
+                          background: pathname === '/orders' ? 'var(--gold-sub)' : 'transparent',
+                        }}
+                        onMouseEnter={e => { if (pathname !== '/orders') e.currentTarget.style.background = 'var(--elevated)'; }}
+                        onMouseLeave={e => { if (pathname !== '/orders') e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <ClipboardList size={19} /> {t('orders')}
+                      </Link>
+                      <Link
+                        href="/seller/register"
+                        onClick={() => setDrawerOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all"
+                        style={{ color: 'var(--gold)', background: 'var(--gold-sub)', border: '1px solid rgba(201,169,110,0.2)' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,169,110,0.2)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--gold-sub)'; }}
+                      >
+                        <StoreIcon size={19} /> {t('openStore')}
+                      </Link>
+                    </>
                   )}
                   <button
                     onClick={() => { logout(); setDrawerOpen(false); }}

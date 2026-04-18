@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingCart, Sparkles, Store, Package, UserCircle2, ChevronDown, Globe, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, Sparkles, Store, Package, UserCircle2, ChevronDown, Globe, LayoutDashboard, StoreIcon } from 'lucide-react';
 import { useCartStore } from '@/store/cart.store';
 import { useAuthStore } from '@/store/auth.store';
 import { useLangStore } from '@/store/lang.store';
@@ -208,6 +208,16 @@ export default function Header() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
+                  <Link
+                    href="/seller/register"
+                    className="hidden md:flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-all tracking-wide"
+                    style={{ color: 'var(--tx-3)', border: '1px solid var(--b-sub)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.borderColor = 'var(--gold)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--tx-3)'; e.currentTarget.style.borderColor = 'var(--b-sub)'; }}
+                  >
+                    <StoreIcon size={14} />
+                    {t('openStore')}
+                  </Link>
                   <Link
                     href="/auth"
                     className="text-sm font-medium px-3 py-1.5 rounded-lg transition-all tracking-wide"
