@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Menu, Heart, Search, ShoppingCart,
-  X, Package, Store, Sparkles, ClipboardList, LogOut, UserCircle2, LayoutDashboard, StoreIcon,
+  X, Package, Store, Sparkles, ClipboardList, LogOut, UserCircle2, LayoutDashboard, StoreIcon, Globe, ChevronDown,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cart.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -28,6 +28,8 @@ export default function MobileTabBar() {
   const { lang, setLang } = useLangStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
@@ -239,24 +241,42 @@ export default function MobileTabBar() {
               )}
             </div>
 
-            {/* Lang switcher */}
+            {/* Lang switcher dropdown */}
             <div className="px-5 py-4" style={{ borderTop: '1px solid var(--b-sub)' }}>
-              <p className="text-xs mb-2 tracking-widest uppercase" style={{ color: 'var(--tx-3)' }}>{t('language')}</p>
-              <div className="flex gap-1.5">
-                {LANGS.map(({ code, flag, label }) => (
-                  <button
-                    key={code}
-                    onClick={() => setLang(code)}
-                    className="flex-1 py-2 text-sm font-medium rounded-lg transition-all"
-                    style={{
-                      background: lang === code ? 'var(--gold)' : 'var(--elevated)',
-                      color: lang === code ? '#0a0a0a' : 'var(--tx-2)',
-                      border: `1px solid ${lang === code ? 'var(--gold)' : 'var(--b-def)'}`,
-                    }}
+              <div ref={langRef} className="relative">
+                <button
+                  onClick={() => setLangOpen(v => !v)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+                  style={{ background: 'var(--elevated)', border: '1px solid var(--b-def)', color: 'var(--tx-2)' }}
+                >
+                  <span className="flex items-center gap-2">
+                    <Globe size={15} style={{ color: 'var(--tx-3)' }} />
+                    {LANGS.find(l => l.code === lang)?.flag} {LANGS.find(l => l.code === lang)?.label}
+                  </span>
+                  <ChevronDown size={14} style={{ color: 'var(--tx-3)', transform: langOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
+
+                {langOpen && (
+                  <div
+                    className="absolute bottom-full left-0 right-0 mb-1 rounded-xl py-1 z-10"
+                    style={{ background: 'var(--elevated)', border: '1px solid var(--b-def)', boxShadow: '0 -8px 30px rgba(0,0,0,0.5)' }}
                   >
-                    {flag} {label}
-                  </button>
-                ))}
+                    {LANGS.map(({ code, flag, label }) => (
+                      <button
+                        key={code}
+                        onClick={() => { setLang(code); setLangOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-left"
+                        style={{
+                          color: code === lang ? 'var(--gold)' : 'var(--tx-2)',
+                          background: code === lang ? 'var(--gold-sub)' : 'transparent',
+                        }}
+                      >
+                        {flag} {label}
+                        {code === lang && <span className="ml-auto" style={{ color: 'var(--gold)' }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
