@@ -1,70 +1,76 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
-  async getDashboard() {
-    const [users, products, orders, revenue] = await Promise.all([
-      this.prisma.user.count(),
+  async getStats() {
+    const [customers, storeOwners, stores, products, orders] = await Promise.all([
+      this.prisma.user.count({ where: { role: 'CUSTOMER' } }),
+      this.prisma.user.count({ where: { role: 'STORE_OWNER' } }),
+      this.prisma.store.count(),
       this.prisma.product.count(),
       this.prisma.order.count(),
-      this.prisma.order.aggregate({ _sum: { total: true } }),
     ]);
+    return { customers, storeOwners, stores, products, orders };
+  }
 
-    const ordersByStatus = await this.prisma.order.groupBy({
-      by: ['status'],
-      _count: true,
-    });
-
-    const recentOrders = await this.prisma.order.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: { select: { name: true, email: true } },
-        store: { select: { name: true } },
-        items: { include: { product: { select: { name: true } } } },
+  async getCustomers() {
+    return this.prisma.user.findMany({
+      where: { role: 'CUSTOMER' },
+      select: {
+        id: true, name: true, email: true, phone: true,
+        passportId: true, frozen: true, createdAt: true,
+        _count: { select: { orders: true } },
       },
+      orderBy: { createdAt: 'desc' },
     });
+  }
 
-    const topProducts = await this.prisma.orderItem.groupBy({
-      by: ['productId'],
-      _sum: { qty: true },
-      orderBy: { _sum: { qty: 'desc' } },
-      take: 5,
+  async getStoreOwners() {
+    return this.prisma.user.findMany({
+      where: { role: 'STORE_OWNER' },
+      select: {
+        id: true, name: true, email: true, phone: true,
+        passportId: true, frozen: true, createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
     });
+  }
 
-    return {
-      stats: { users, products, orders, revenue: revenue._sum.total },
-      ordersByStatus,
-      recentOrders,
-      topProducts,
-    };
+  async getStores() {
+    return this.prisma.store.findMany({
+      select: {
+        id: true, name: true, address: true, phone: true,
+        email: true, frozen: true, createdAt: true,
+        _count: { select: { products: true, orders: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async freezeUser(id: string, frozen: boolean) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('Пользователь не найден');
+    return this.prisma.user.update({ where: { id }, data: { frozen } });
+  }
+
+  async freezeStore(id: string, frozen: boolean) {
+    const store = await this.prisma.store.findUnique({ where: { id } });
+    if (!store) throw new NotFoundException('Магазин не найден');
+    return this.prisma.store.update({ where: { id }, data: { frozen } });
+  }
+
+  // legacy
+  async getDashboard() {
+    return this.getStats();
   }
 
   async getUsers() {
     return this.prisma.user.findMany({
-      select: { id: true, name: true, email: true, phone: true, role: true, createdAt: true, _count: { select: { orders: true } } },
+      select: { id: true, name: true, email: true, phone: true, passportId: true, role: true, frozen: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
     });
-  }
-
-  async getAllOrders(page = 1, limit = 20) {
-    const [items, total] = await Promise.all([
-      this.prisma.order.findMany({
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { name: true, email: true } },
-          store: { select: { name: true } },
-          items: true,
-        },
-      }),
-      this.prisma.order.count(),
-    ]);
-
-    return { items, total, page, pages: Math.ceil(total / limit) };
   }
 }

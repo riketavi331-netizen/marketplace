@@ -14,11 +14,13 @@ model User {
   phone     String?
   name      String
   password  String
-  role      Role     @default(CUSTOMER)
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
+  role       Role     @default(CUSTOMER)
+  address    String?
+  passportId String?
+  frozen     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  orders     Order[]
 }
 
 enum Role {
@@ -36,6 +38,7 @@ model Store {
   phone     String?
   email     String?
   logo      String?
+  frozen    Boolean   @default(false)
   products  Product[]
   orders    Order[]
   createdAt DateTime  @default(now())

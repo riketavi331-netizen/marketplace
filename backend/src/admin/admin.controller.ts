@@ -1,7 +1,11 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../auth/jwt.guard';
 import { AdminService } from './admin.service';
+
+function adminGuard(req: any) {
+  if (req.user?.role !== 'ADMIN') throw new ForbiddenException('Только для администраторов');
+}
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -10,21 +14,52 @@ import { AdminService } from './admin.service';
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
+  @Get('stats')
+  getStats(@Request() req: any) {
+    adminGuard(req);
+    return this.adminService.getStats();
+  }
+
+  @Get('customers')
+  getCustomers(@Request() req: any) {
+    adminGuard(req);
+    return this.adminService.getCustomers();
+  }
+
+  @Get('store-owners')
+  getStoreOwners(@Request() req: any) {
+    adminGuard(req);
+    return this.adminService.getStoreOwners();
+  }
+
+  @Get('stores')
+  getStores(@Request() req: any) {
+    adminGuard(req);
+    return this.adminService.getStores();
+  }
+
+  @Patch('users/:id/freeze')
+  freezeUser(@Request() req: any, @Param('id') id: string, @Body('frozen') frozen: boolean) {
+    adminGuard(req);
+    return this.adminService.freezeUser(id, frozen);
+  }
+
+  @Patch('stores/:id/freeze')
+  freezeStore(@Request() req: any, @Param('id') id: string, @Body('frozen') frozen: boolean) {
+    adminGuard(req);
+    return this.adminService.freezeStore(id, frozen);
+  }
+
+  // legacy
   @Get('dashboard')
-  @ApiOperation({ summary: 'Дашборд — общая статистика' })
-  getDashboard() {
+  getDashboard(@Request() req: any) {
+    adminGuard(req);
     return this.adminService.getDashboard();
   }
 
   @Get('users')
-  @ApiOperation({ summary: 'Все пользователи' })
-  getUsers() {
+  getUsers(@Request() req: any) {
+    adminGuard(req);
     return this.adminService.getUsers();
-  }
-
-  @Get('orders')
-  @ApiOperation({ summary: 'Все заказы с пагинацией' })
-  getAllOrders(@Query('page') page = '1', @Query('limit') limit = '20') {
-    return this.adminService.getAllOrders(Number(page), Number(limit));
   }
 }

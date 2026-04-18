@@ -62,9 +62,12 @@ export const aiApi = {
 };
 
 export const adminApi = {
-  getDashboard: () => api.get('/admin/dashboard'),
-  getUsers: () => api.get('/admin/users'),
-  getOrders: (page = 1) => api.get('/admin/orders', { params: { page } }),
+  getStats: () => api.get('/admin/stats'),
+  getCustomers: () => api.get('/admin/customers'),
+  getStoreOwners: () => api.get('/admin/store-owners'),
+  getStores: () => api.get('/admin/stores'),
+  freezeUser: (id: string, frozen: boolean) => api.patch(`/admin/users/${id}/freeze`, { frozen }),
+  freezeStore: (id: string, frozen: boolean) => api.patch(`/admin/stores/${id}/freeze`, { frozen }),
 };
 
 export const sellerApi = {

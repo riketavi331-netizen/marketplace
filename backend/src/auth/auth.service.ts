@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterByEmailDto, RegisterByPhoneDto } from './dto/register.dto';
@@ -48,6 +48,7 @@ export class AuthService {
   async loginByEmail(dto: LoginByEmailDto) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (!user) throw new UnauthorizedException('Неверный email или пароль');
+    if (user.frozen) throw new ForbiddenException('Аккаунт заморожен');
 
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Неверный email или пароль');
@@ -59,6 +60,7 @@ export class AuthService {
   async loginByPhone(dto: LoginByPhoneDto) {
     const user = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
     if (!user) throw new UnauthorizedException('Неверный телефон или пароль');
+    if (user.frozen) throw new ForbiddenException('Аккаунт заморожен');
 
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Неверный телефон или пароль');
@@ -80,6 +82,7 @@ export class AuthService {
         email: dto.email,
         phone: dto.phone,
         address: dto.postalAddress,
+        passportId: dto.passportId,
         password: await bcrypt.hash(dto.password, 10),
         role: 'STORE_OWNER',
       },
